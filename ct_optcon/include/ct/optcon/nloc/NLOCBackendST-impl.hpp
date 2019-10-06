@@ -78,6 +78,20 @@ SCALAR NLOCBackendST<STATE_DIM, CONTROL_DIM, P_DIM, V_DIM, SCALAR, CONTINUOUS>::
     this->lu_norm_ = 0.0;
 
 
+    // experimental -- get improved line-search score
+    ct::core::ControlVectorArray<CONTROL_DIM, SCALAR> lv; // todo how to make this a pointer?
+    this->lqocSolver_->get_lv(lv);
+    SCALAR Delta1 = 0;
+    SCALAR Delta2 = 0;
+    SCALAR c1 = 0.1;
+    for(size_t i = 0; i< this->K_; i++)
+    {
+        // TODO: this can sometimes become negative and allow an overall increase of cost. Is this desirable?
+        Delta1 += lv[i].transpose() * this->lqocProblem_->rv_[i];
+        Delta2 += 0.5 * lv[i].transpose() * this->lqocProblem_->R_[i] * lv[i];
+    }
+
+
     while (iterations < this->settings_.lineSearchSettings.maxIterations)
     {
         if (this->settings_.lineSearchSettings.debugPrint)
@@ -115,13 +129,15 @@ SCALAR NLOCBackendST<STATE_DIM, CONTROL_DIM, P_DIM, V_DIM, SCALAR, CONTINUOUS>::
                this->settings_.meritFunctionRhoConstraints * (e_box_norm + e_gen_norm);
 
         // catch the case that a rollout might be unstable
+        SCALAR expCostDecr = (alpha*Delta1 + alpha*alpha*Delta2);
         if (std::isnan(cost) ||
-            cost >= this->lowestCost_)  // TODO: alternatively cost >= (this->lowestCost_*(1 - 1e-3*alpha)), study this
+            cost >= (this->lowestCost_- c1 * expCostDecr)) 
         {
             if (this->settings_.lineSearchSettings.debugPrint)
             {
                 std::cout << "[LineSearch]: No better cost/merit found at alpha " << alpha << ":" << std::endl;
                 std::cout << "[LineSearch]: Cost:\t" << intermediateCost + finalCost << std::endl;
+                std::cout << "[LineSearch]: Expected cost decr:\t " << expCostDecr << std::endl;
                 std::cout << "[LineSearch]: Defect:\t" << defectNorm << std::endl;
                 std::cout << "[LineSearch]: err box constr:\t" + std::to_string(e_box_norm) << std::endl;
                 std::cout << "[LineSearch]: err gen constr:\t" + std::to_string(e_gen_norm) << std::endl;

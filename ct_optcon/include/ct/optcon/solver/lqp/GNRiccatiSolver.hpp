@@ -64,6 +64,10 @@ public:
 
     virtual SCALAR getSmallestEigenvalue() override;
 
+    virtual void get_lv(ct::core::ControlVectorArray<CONTROL_DIM, SCALAR>& lv) override { 
+        lv = lv_;
+    }
+
 protected:
     /*!
 	 * resize matrices

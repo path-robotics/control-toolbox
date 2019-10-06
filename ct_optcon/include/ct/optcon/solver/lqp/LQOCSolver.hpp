@@ -31,6 +31,7 @@ public:
 	 * @param lqocProblem shared_ptr to the LQOCProblem to be solved.
 	 */
     LQOCSolver(const std::shared_ptr<LQOCProblem_t>& lqocProblem = nullptr) : lqocProblem_(lqocProblem) {}
+
     //! destructor
     virtual ~LQOCSolver() {}
     /*!
@@ -38,12 +39,12 @@ public:
 	 * update the shared_ptr to the LQOCProblem instance and call initialize instance deriving from this class.
 	 * @param lqocProblem
 	 */
+    
     void setProblem(std::shared_ptr<LQOCProblem_t> lqocProblem)
     {
         setProblemImpl(lqocProblem);
         lqocProblem_ = lqocProblem;
     }
-
 
     virtual void configure(const NLOptConSettings& settings) = 0;
 
@@ -69,6 +70,7 @@ public:
 
     //! solve the LQOC problem
     virtual void solve() = 0;
+
     //! extract the solution (can be overriden if additional extraction steps required in specific solver)
     virtual void extractLQSolution(){};
 
@@ -83,8 +85,14 @@ public:
     }
 
     const ct::core::StateVectorArray<STATE_DIM, SCALAR>& getSolutionState() { return x_sol_; }
+
     const ct::core::ControlVectorArray<CONTROL_DIM, SCALAR>& getSolutionControl() { return u_sol_; }
+    
     const ct::core::FeedbackArray<STATE_DIM, CONTROL_DIM, SCALAR>& getSolutionFeedback() { return L_; }
+
+    virtual void get_lv(ct::core::ControlVectorArray<CONTROL_DIM, SCALAR>& lv) { 
+        throw std::runtime_error("Lv not supported by this LQ solver....");
+     }
 
 protected:
     virtual void setProblemImpl(std::shared_ptr<LQOCProblem_t> lqocProblem) = 0;
