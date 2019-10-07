@@ -29,36 +29,36 @@ protected:
 
 public:
 
-    inline CGException(const std::string& message) throw () :
+    inline CGException(const std::string& message) noexcept (true) :
         _message(message) {
     }
 
     template<typename... Ts>
-    explicit CGException(const Ts&... ts) throw () {
+    explicit CGException(const Ts&... ts) noexcept (true) {
         std::ostringstream s;
         createMessage(s, ts...);
         _message = s.str();
     }
 
-    CGException() throw () = delete;
+    CGException() noexcept (true) = delete;
 
-    const char* what() const throw () {
+    const char* what() const noexcept (true) {
         return _message.c_str();
     }
 
-    virtual ~CGException() throw () {
+    virtual ~CGException() noexcept (true) {
     }
 
 private:
 
     template <typename T, typename... Ts>
-    inline void createMessage(std::ostringstream& s, const T& t, const Ts&... ts) throw () {
+    inline void createMessage(std::ostringstream& s, const T& t, const Ts&... ts) noexcept (true) {
         s << t;
         createMessage(s, ts...);
     }
 
     template <typename T>
-    inline void createMessage(std::ostringstream& s, const T& t) throw () {
+    inline void createMessage(std::ostringstream& s, const T& t) noexcept (true) {
         s << t;
     }
 
